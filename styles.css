@@ -3,3 +3,33 @@
     font-weight: bold;
     margin-bottom: 10px;
 }
+
+/* Custom Prompt Full Width & Height Styling */
+.translator-prompt-setting {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-top: 16px !important;
+}
+
+.translator-prompt-setting .setting-item-info {
+    margin-bottom: 10px !important;
+    width: 100% !important;
+}
+
+.translator-prompt-setting .setting-item-control {
+    width: 100% !important;
+    justify-content: flex-start !important;
+}
+
+.translator-prompt-textarea {
+    width: 100% !important;
+    min-height: 140px !important;
+    font-family: var(--font-monospace);
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    box-sizing: border-box !important;
+    resize: vertical !important;
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+}

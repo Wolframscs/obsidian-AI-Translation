@@ -13,15 +13,15 @@ const DEFAULT_SETTINGS = {
 	openaiKey: '',
 	openaiModel: 'gpt-4o',
 	claudeKey: '',
-	claudeModel: 'claude-3-5-sonnet-latest',
+	claudeModel: 'claude-3-7-sonnet-latest',
 	siliconflowKey: '',
 	siliconflowModel: 'deepseek-ai/DeepSeek-V3',
 	moonshotKey: '',
-	moonshotModel: 'moonshot-v1-8k',
+	moonshotModel: 'moonshot-v1-auto',
 	zhipuKey: '',
-	zhipuModel: 'glm-4-flash',
+	zhipuModel: 'glm-4-plus',
 	openrouterKey: '',
-	openrouterModel: 'meta-llama/llama-3.3-70b-instruct',
+	openrouterModel: 'deepseek/deepseek-chat',
 	groqKey: '',
 	groqModel: 'llama-3.3-70b-versatile',
 	customUrl: '',
@@ -58,7 +58,7 @@ class Translator {
 				break;
 			case 'doubao':
 				url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-				model = this.settings.doubaoModel; // User must enter Endpoint ID
+				model = this.settings.doubaoModel; // User enters Endpoint ID
 				apiKey = this.settings.doubaoKey;
 				break;
 			case 'gemini':
@@ -73,7 +73,7 @@ class Translator {
 				break;
 			case 'claude':
 				url = 'https://api.anthropic.com/v1/messages';
-				model = this.settings.claudeModel || 'claude-3-5-sonnet-latest';
+				model = this.settings.claudeModel || 'claude-3-7-sonnet-latest';
 				apiKey = this.settings.claudeKey;
 				break;
 			case 'siliconflow':
@@ -83,17 +83,17 @@ class Translator {
 				break;
 			case 'moonshot':
 				url = 'https://api.moonshot.cn/v1/chat/completions';
-				model = this.settings.moonshotModel || 'moonshot-v1-8k';
+				model = this.settings.moonshotModel || 'moonshot-v1-auto';
 				apiKey = this.settings.moonshotKey;
 				break;
 			case 'zhipu':
 				url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-				model = this.settings.zhipuModel || 'glm-4-flash';
+				model = this.settings.zhipuModel || 'glm-4-plus';
 				apiKey = this.settings.zhipuKey;
 				break;
 			case 'openrouter':
 				url = 'https://openrouter.ai/api/v1/chat/completions';
-				model = this.settings.openrouterModel || 'meta-llama/llama-3.3-70b-instruct';
+				model = this.settings.openrouterModel || 'deepseek/deepseek-chat';
 				apiKey = this.settings.openrouterKey;
 				break;
 			case 'groq':
@@ -116,8 +116,20 @@ class Translator {
 			throw new Error('API Key not set');
 		}
 
-		const systemPrompt = this.settings.systemPrompt ||
-			`You are a professional translation assistant. Please directly translate the input text into ${this.settings.targetLanguage || 'Chinese'}. Do not output any explanations, comments, or extra words, only output the translation result.`;
+		if (this.settings.provider === 'doubao' && (!model || !model.trim())) {
+			throw new Error('Doubao Endpoint ID (Model) not set');
+		}
+
+		if (!model || model === '__custom__') {
+			throw new Error('Please enter or select a valid Model ID');
+		}
+
+		const targetLang = (this.settings.targetLanguage && this.settings.targetLanguage.trim() && this.settings.targetLanguage !== 'custom')
+			? this.settings.targetLanguage.trim()
+			: 'Chinese';
+		const customPrompt = (this.settings.systemPrompt && this.settings.systemPrompt.trim()) ? this.settings.systemPrompt.trim() : '';
+		const systemPrompt = customPrompt ||
+			`You are a professional translation assistant. Please directly translate the input text into ${targetLang}. Do not output any explanations, comments, or extra words, only output the translation result.`;
 
 		let requestBody;
 		const headers = {
@@ -173,7 +185,6 @@ class Translator {
 			const response = await requestUrl(requestParam);
 
 			if (response.status !== 200) {
-				// Try to parse error message from body if possible
 				let errorMsg = `API Error: ${response.status}`;
 				try {
 					if (response.json && response.json.error && response.json.error.message) {
@@ -206,10 +217,12 @@ class Translator {
 	}
 
 	async testConnection(provider, apiKey, model) {
-		// Simple test to verify connectivity and key
-		const testText = "Hello";
-		// Create a temporary settings object for testing
-		// To reuse logic without modifying instance state, we manually construct request
+		if (provider !== 'custom' && (!apiKey || !apiKey.trim())) {
+			return { success: false, message: 'Please enter API Key first' };
+		}
+		if (provider === 'doubao' && (!model || !model.trim())) {
+			return { success: false, message: 'Please enter Doubao Endpoint ID' };
+		}
 
 		let url = '';
 		let targetModel = model;
@@ -225,7 +238,6 @@ class Translator {
 				break;
 			case 'doubao':
 				url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-				// targetModel is already passed in
 				break;
 			case 'gemini':
 				url = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
@@ -237,7 +249,7 @@ class Translator {
 				break;
 			case 'claude':
 				url = 'https://api.anthropic.com/v1/messages';
-				targetModel = model || 'claude-3-5-sonnet-latest';
+				targetModel = model || 'claude-3-7-sonnet-latest';
 				break;
 			case 'siliconflow':
 				url = 'https://api.siliconflow.cn/v1/chat/completions';
@@ -245,15 +257,15 @@ class Translator {
 				break;
 			case 'moonshot':
 				url = 'https://api.moonshot.cn/v1/chat/completions';
-				targetModel = model || 'moonshot-v1-8k';
+				targetModel = model || 'moonshot-v1-auto';
 				break;
 			case 'zhipu':
 				url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-				targetModel = model || 'glm-4-flash';
+				targetModel = model || 'glm-4-plus';
 				break;
 			case 'openrouter':
 				url = 'https://openrouter.ai/api/v1/chat/completions';
-				targetModel = model || 'meta-llama/llama-3.3-70b-instruct';
+				targetModel = model || 'deepseek/deepseek-chat';
 				break;
 			case 'groq':
 				url = 'https://api.groq.com/openai/v1/chat/completions';
@@ -267,6 +279,9 @@ class Translator {
 
 		if (provider === 'custom' && !url) {
 			return { success: false, message: 'Custom API URL not set' };
+		}
+		if (!targetModel || targetModel === '__custom__') {
+			return { success: false, message: 'Please enter or select a valid Model ID' };
 		}
 
 		let requestBody;
@@ -380,6 +395,8 @@ class TranslatorPlugin extends Plugin {
 				const replacement = `${text}\n${translatedText}`;
 				editor.replaceSelection(replacement);
 				new Notice('Translation completed');
+			} else {
+				new Notice('Translation failed: empty response from model');
 			}
 		} catch (error) {
 			console.error(error);
@@ -413,22 +430,23 @@ class TranslatorSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h2', { text: 'AI Translation Settings' });
 
+		// Pure English Provider Names
 		new Setting(containerEl)
 			.setName('AI Provider')
 			.setDesc('Select translation service to use')
 			.addDropdown(dropdown => dropdown
 				.addOption('deepseek', 'DeepSeek')
-				.addOption('qwen', 'Tongyi Qianwen (Qwen)')
+				.addOption('qwen', 'Aliyun')
 				.addOption('doubao', 'Doubao')
 				.addOption('gemini', 'Google Gemini')
 				.addOption('openai', 'OpenAI')
 				.addOption('claude', 'Anthropic Claude')
-				.addOption('siliconflow', 'SiliconFlow (硅基流动)')
-				.addOption('moonshot', 'Moonshot AI (Kimi)')
-				.addOption('zhipu', 'Zhipu AI (GLM)')
+				.addOption('siliconflow', 'SiliconFlow')
+				.addOption('moonshot', 'Moonshot AI')
+				.addOption('zhipu', 'Zhipu AI')
 				.addOption('openrouter', 'OpenRouter')
 				.addOption('groq', 'Groq')
-				.addOption('custom', 'Custom API (自定义 API)')
+				.addOption('custom', 'Custom API')
 				.setValue(this.plugin.settings.provider)
 				.onChange(async (value) => {
 					this.plugin.settings.provider = value;
@@ -441,9 +459,9 @@ class TranslatorSettingTab extends PluginSettingTab {
 			this.addProviderSettings(containerEl, 'DeepSeek', 'deepseek');
 		}
 
-		// Qwen Settings
+		// Aliyun Settings
 		if (this.plugin.settings.provider === 'qwen') {
-			this.addProviderSettings(containerEl, 'Tongyi Qianwen', 'qwen');
+			this.addProviderSettings(containerEl, 'Aliyun', 'qwen');
 		}
 
 		// Doubao Settings
@@ -473,12 +491,12 @@ class TranslatorSettingTab extends PluginSettingTab {
 
 		// Moonshot Settings
 		if (this.plugin.settings.provider === 'moonshot') {
-			this.addProviderSettings(containerEl, 'Moonshot AI (Kimi)', 'moonshot');
+			this.addProviderSettings(containerEl, 'Moonshot AI', 'moonshot');
 		}
 
 		// Zhipu Settings
 		if (this.plugin.settings.provider === 'zhipu') {
-			this.addProviderSettings(containerEl, 'Zhipu AI (GLM)', 'zhipu');
+			this.addProviderSettings(containerEl, 'Zhipu AI', 'zhipu');
 		}
 
 		// OpenRouter Settings
@@ -498,28 +516,77 @@ class TranslatorSettingTab extends PluginSettingTab {
 
 		containerEl.createEl('h3', { text: 'Prompt Settings' });
 
+		// Target Language Dropdown
+		const standardLanguages = {
+			'Chinese': 'Chinese (简体中文)',
+			'Traditional Chinese': 'Traditional Chinese (繁體中文)',
+			'English': 'English (英语)',
+			'Japanese': '日本語 (Japanese / 日语)',
+			'Korean': '한국어 (Korean / 韩语)',
+			'German': 'Deutsch (German / 德语)',
+			'French': 'Français (French / 法语)',
+			'Spanish': 'Español (Spanish / 西班牙语)',
+			'Russian': 'Русский (Russian / 俄语)',
+			'Portuguese': 'Português (葡萄牙语)',
+			'Italian': 'Italiano (意大利语)',
+			'custom': 'Custom (自定义语言)...'
+		};
+
+		const currentTarget = (this.plugin.settings.targetLanguage || 'Chinese').trim();
+		const isCustomLang = !Object.keys(standardLanguages).filter(k => k !== 'custom').includes(currentTarget);
+
 		new Setting(containerEl)
 			.setName('Target Language')
-			.setDesc('Language to translate into (used in default prompt)')
-			.addText(text => text
-				.setValue(this.plugin.settings.targetLanguage)
-				.onChange(async (value) => {
-					this.plugin.settings.targetLanguage = value;
+			.setDesc('Select the target language for translation')
+			.addDropdown(dropdown => {
+				for (const [code, label] of Object.entries(standardLanguages)) {
+					dropdown.addOption(code, label);
+				}
+				dropdown.setValue(isCustomLang ? 'custom' : currentTarget);
+				dropdown.onChange(async (value) => {
+					if (value === 'custom') {
+						if (!isCustomLang) {
+							this.plugin.settings.targetLanguage = 'custom';
+						}
+					} else {
+						this.plugin.settings.targetLanguage = value;
+					}
 					await this.plugin.saveSettings();
-				}));
+					this.display();
+				});
+			});
 
-		const defaultPrompt = `You are a professional translation assistant. Please directly translate the input text into ${this.plugin.settings.targetLanguage || 'Chinese'}. Do not output any explanations, comments, or extra words, only output the translation result.`;
+		if (isCustomLang) {
+			new Setting(containerEl)
+				.setName('Custom Target Language')
+				.setDesc('Enter the custom target language name (e.g. Latin, Arabic)')
+				.addText(text => text
+					.setPlaceholder('e.g. Latin')
+					.setValue(currentTarget === 'custom' ? '' : currentTarget)
+					.onChange(async (value) => {
+						this.plugin.settings.targetLanguage = value.trim() || 'custom';
+						await this.plugin.saveSettings();
+					}));
+		}
 
-		new Setting(containerEl)
+		const effectiveLang = (currentTarget === 'custom' || !currentTarget) ? 'Chinese' : currentTarget;
+		const defaultPrompt = `You are a professional translation assistant. Please directly translate the input text into ${effectiveLang}. Do not output any explanations, comments, or extra words, only output the translation result.`;
+
+		const promptSetting = new Setting(containerEl)
 			.setName('Custom System Prompt')
-			.setDesc('Override the default system prompt. Leave empty to use default.')
-			.addTextArea(text => text
-				.setPlaceholder(defaultPrompt)
+			.setDesc('Override the default system prompt. Leave empty to use default.');
+
+		promptSetting.settingEl.addClass('translator-prompt-setting');
+		promptSetting.addTextArea(text => {
+			text.setPlaceholder(defaultPrompt)
 				.setValue(this.plugin.settings.systemPrompt)
 				.onChange(async (value) => {
 					this.plugin.settings.systemPrompt = value;
 					await this.plugin.saveSettings();
-				}));
+				});
+			text.inputEl.rows = 6;
+			text.inputEl.addClass('translator-prompt-textarea');
+		});
 	}
 
 	addProviderSettings(containerEl, name, keyPrefix) {
@@ -530,7 +597,7 @@ class TranslatorSettingTab extends PluginSettingTab {
 				.setPlaceholder('sk-...')
 				.setValue(this.plugin.settings[`${keyPrefix}Key`])
 				.onChange(async (value) => {
-					this.plugin.settings[`${keyPrefix}Key`] = value;
+					this.plugin.settings[`${keyPrefix}Key`] = value.trim();
 					await this.plugin.saveSettings();
 				}))
 			.addButton(button => button
@@ -552,150 +619,102 @@ class TranslatorSettingTab extends PluginSettingTab {
 
 		if (keyPrefix === 'doubao') {
 			new Setting(containerEl)
-				.setName(`${name} Model`)
-				.setDesc('For Doubao, please enter your Endpoint ID (e.g., ep-202406...)')
+				.setName(`${name} Model (Endpoint ID)`)
+				.setDesc('Enter your Doubao Endpoint ID from Volcengine console (e.g. ep-202406...)')
 				.addText(text => text
 					.setPlaceholder('ep-...')
 					.setValue(this.plugin.settings[`${keyPrefix}Model`])
 					.onChange(async (value) => {
-						this.plugin.settings[`${keyPrefix}Model`] = value;
+						this.plugin.settings[`${keyPrefix}Model`] = value.trim();
 						await this.plugin.saveSettings();
 					}));
 		} else {
+			// At most 3 latest preset models per provider
 			let presetModels = [];
+			const modelOptions = [];
+
 			switch (keyPrefix) {
 				case 'deepseek':
-					presetModels = ['deepseek-chat', 'deepseek-reasoner', 'deepseek-v4-flash'];
-					break;
-				case 'gemini':
-					presetModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-					break;
-				case 'openai':
-					presetModels = ['gpt-4o', 'gpt-4o-mini', 'o1-mini', 'o3-mini', 'gpt-4-turbo'];
-					break;
-				case 'claude':
-					presetModels = ['claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest', 'claude-3-opus-latest'];
-					break;
-				case 'siliconflow':
-					presetModels = [
-						'deepseek-ai/DeepSeek-V3',
-						'deepseek-ai/DeepSeek-R1',
-						'Qwen/Qwen2.5-72B-Instruct',
-						'Qwen/Qwen2.5-32B-Instruct',
-						'Qwen/Qwen2.5-14B-Instruct',
-						'Qwen/Qwen2.5-7B-Instruct',
-						'THUDM/glm-4-9b-chat',
-						'internlm/internlm2_5-20b-chat'
-					];
-					break;
-				case 'moonshot':
-					presetModels = ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'];
-					break;
-				case 'zhipu':
-					presetModels = ['glm-4-flash', 'glm-4-plus', 'glm-4-air', 'glm-4-long'];
-					break;
-				case 'openrouter':
-					presetModels = [
-						'meta-llama/llama-3.3-70b-instruct',
-						'deepseek/deepseek-chat',
-						'google/gemini-2.5-flash',
-						'anthropic/claude-3.5-sonnet'
-					];
-					break;
-				case 'groq':
-					presetModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768', 'gemma2-9b-it'];
+					presetModels = ['deepseek-chat', 'deepseek-reasoner'];
+					modelOptions.push(['deepseek-chat', 'DeepSeek-V3 (deepseek-chat) - Recommended']);
+					modelOptions.push(['deepseek-reasoner', 'DeepSeek-R1 (deepseek-reasoner) - Reasoning']);
 					break;
 				case 'qwen':
+					presetModels = ['qwen-plus', 'qwen-max', 'qwen-turbo'];
+					modelOptions.push(['qwen-plus', 'Qwen-Plus (Recommended)']);
+					modelOptions.push(['qwen-max', 'Qwen-Max (Best performance)']);
+					modelOptions.push(['qwen-turbo', 'Qwen-Turbo (Fast & Cost-effective)']);
+					break;
+				case 'gemini':
+					presetModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+					modelOptions.push(['gemini-2.5-flash', 'Gemini 2.5 Flash (Recommended)']);
+					modelOptions.push(['gemini-2.5-pro', 'Gemini 2.5 Pro (Best reasoning)']);
+					modelOptions.push(['gemini-2.0-flash', 'Gemini 2.0 Flash (Fast & Stable)']);
+					break;
+				case 'openai':
+					presetModels = ['gpt-4o', 'gpt-4o-mini', 'o3-mini'];
+					modelOptions.push(['gpt-4o', 'GPT-4o (Recommended)']);
+					modelOptions.push(['gpt-4o-mini', 'GPT-4o-mini (Fast & Lightweight)']);
+					modelOptions.push(['o3-mini', 'o3-mini (High reasoning)']);
+					break;
+				case 'claude':
+					presetModels = ['claude-3-7-sonnet-latest', 'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'];
+					modelOptions.push(['claude-3-7-sonnet-latest', 'Claude 3.7 Sonnet (Hybrid thinking)']);
+					modelOptions.push(['claude-3-5-sonnet-latest', 'Claude 3.5 Sonnet (Industry standard)']);
+					modelOptions.push(['claude-3-5-haiku-latest', 'Claude 3.5 Haiku (Fast & Lightweight)']);
+					break;
+				case 'siliconflow':
+					presetModels = ['deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1', 'Qwen/Qwen2.5-72B-Instruct'];
+					modelOptions.push(['deepseek-ai/DeepSeek-V3', 'DeepSeek-V3 (Mainstream)']);
+					modelOptions.push(['deepseek-ai/DeepSeek-R1', 'DeepSeek-R1 (Full reasoning)']);
+					modelOptions.push(['Qwen/Qwen2.5-72B-Instruct', 'Qwen 2.5 72B']);
+					break;
+				case 'moonshot':
+					presetModels = ['moonshot-v1-auto', 'moonshot-v1-8k', 'moonshot-v1-32k'];
+					modelOptions.push(['moonshot-v1-auto', 'Kimi Auto (Adaptive / Recommended)']);
+					modelOptions.push(['moonshot-v1-8k', 'Kimi 8k (Short text)']);
+					modelOptions.push(['moonshot-v1-32k', 'Kimi 32k (Long text)']);
+					break;
+				case 'zhipu':
+					presetModels = ['glm-4-plus', 'glm-4-flash', 'glm-4-air'];
+					modelOptions.push(['glm-4-plus', 'GLM-4 Plus (Flagship / Recommended)']);
+					modelOptions.push(['glm-4-flash', 'GLM-4 Flash (Fast)']);
+					modelOptions.push(['glm-4-air', 'GLM-4 Air (Cost-effective)']);
+					break;
+				case 'openrouter':
+					presetModels = ['deepseek/deepseek-chat', 'anthropic/claude-3.7-sonnet', 'google/gemini-2.5-flash'];
+					modelOptions.push(['deepseek/deepseek-chat', 'DeepSeek V3']);
+					modelOptions.push(['anthropic/claude-3.7-sonnet', 'Claude 3.7 Sonnet']);
+					modelOptions.push(['google/gemini-2.5-flash', 'Gemini 2.5 Flash']);
+					break;
+				case 'groq':
+					presetModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+					modelOptions.push(['llama-3.3-70b-versatile', 'Llama 3.3 70B (Open-source main)']);
+					modelOptions.push(['llama-3.1-8b-instant', 'Llama 3.1 8B (Sub-second response)']);
+					modelOptions.push(['mixtral-8x7b-32768', 'Mixtral 8x7B (MoE)']);
+					break;
 				default:
-					presetModels = [
-						'qwen-plus',
-						'qwen-max',
-						'qwen-turbo',
-						'qwen-long',
-						'qwen3.7-plus',
-						'qwen3.7-max-2026-05-17',
-						'qwen3.6-35b-a3b',
-						'qwen3.6-flash-2026-04-16',
-						'deepseek-v4-flash',
-						'glm-5.1'
-					];
+					presetModels = [];
 					break;
 			}
 
 			const currentModel = (this.plugin.settings[`${keyPrefix}Model`] || '').trim();
-			const isCustom = currentModel && !presetModels.includes(currentModel);
+			const isCustom = !currentModel || currentModel === '__custom__' || !presetModels.includes(currentModel);
 
 			new Setting(containerEl)
 				.setName(`${name} Model`)
 				.setDesc(`Select ${name} model`)
 				.addDropdown(dropdown => {
-					if (keyPrefix === 'deepseek') {
-						dropdown.addOption('deepseek-chat', 'DeepSeek-V3 (deepseek-chat)');
-						dropdown.addOption('deepseek-reasoner', 'DeepSeek-R1 (deepseek-reasoner)');
-						dropdown.addOption('deepseek-v4-flash', 'DeepSeek-V4-Flash (deepseek-v4-flash)');
-					} else if (keyPrefix === 'gemini') {
-						dropdown.addOption('gemini-2.5-flash', 'Gemini 2.5 Flash (gemini-2.5-flash)');
-						dropdown.addOption('gemini-2.5-pro', 'Gemini 2.5 Pro (gemini-2.5-pro)');
-						dropdown.addOption('gemini-2.0-flash', 'Gemini 2.0 Flash (gemini-2.0-flash)');
-						dropdown.addOption('gemini-1.5-flash', 'Gemini 1.5 Flash (gemini-1.5-flash)');
-						dropdown.addOption('gemini-1.5-pro', 'Gemini 1.5 Pro (gemini-1.5-pro)');
-					} else if (keyPrefix === 'openai') {
-						dropdown.addOption('gpt-4o', 'GPT-4o');
-						dropdown.addOption('gpt-4o-mini', 'GPT-4o-mini');
-						dropdown.addOption('o1-mini', 'o1-mini');
-						dropdown.addOption('o3-mini', 'o3-mini');
-						dropdown.addOption('gpt-4-turbo', 'GPT-4-turbo');
-					} else if (keyPrefix === 'claude') {
-						dropdown.addOption('claude-3-5-sonnet-latest', 'Claude 3.5 Sonnet');
-						dropdown.addOption('claude-3-5-haiku-latest', 'Claude 3.5 Haiku');
-						dropdown.addOption('claude-3-opus-latest', 'Claude 3 Opus');
-					} else if (keyPrefix === 'siliconflow') {
-						dropdown.addOption('deepseek-ai/DeepSeek-V3', 'DeepSeek V3');
-						dropdown.addOption('deepseek-ai/DeepSeek-R1', 'DeepSeek R1');
-						dropdown.addOption('Qwen/Qwen2.5-72B-Instruct', 'Qwen 2.5 72B');
-						dropdown.addOption('Qwen/Qwen2.5-32B-Instruct', 'Qwen 2.5 32B');
-						dropdown.addOption('Qwen/Qwen2.5-14B-Instruct', 'Qwen 2.5 14B');
-						dropdown.addOption('Qwen/Qwen2.5-7B-Instruct', 'Qwen 2.5 7B');
-						dropdown.addOption('THUDM/glm-4-9b-chat', 'GLM 4 9B');
-						dropdown.addOption('internlm/internlm2_5-20b-chat', 'InternLM 2.5 20B');
-					} else if (keyPrefix === 'moonshot') {
-						dropdown.addOption('moonshot-v1-8k', 'Kimi 8k');
-						dropdown.addOption('moonshot-v1-32k', 'Kimi 32k');
-						dropdown.addOption('moonshot-v1-128k', 'Kimi 128k');
-					} else if (keyPrefix === 'zhipu') {
-						dropdown.addOption('glm-4-flash', 'GLM-4 Flash');
-						dropdown.addOption('glm-4-plus', 'GLM-4 Plus');
-						dropdown.addOption('glm-4-air', 'GLM-4 Air');
-						dropdown.addOption('glm-4-long', 'GLM-4 Long');
-					} else if (keyPrefix === 'openrouter') {
-						dropdown.addOption('meta-llama/llama-3.3-70b-instruct', 'Llama 3.3 70B');
-						dropdown.addOption('deepseek/deepseek-chat', 'DeepSeek V3');
-						dropdown.addOption('google/gemini-2.5-flash', 'Gemini 2.5 Flash');
-						dropdown.addOption('anthropic/claude-3.5-sonnet', 'Claude 3.5 Sonnet');
-					} else if (keyPrefix === 'groq') {
-						dropdown.addOption('llama-3.3-70b-versatile', 'Llama 3.3 70B');
-						dropdown.addOption('llama-3.1-8b-instant', 'Llama 3.1 8B');
-						dropdown.addOption('mixtral-8x7b-32768', 'Mixtral 8x7B');
-						dropdown.addOption('gemma2-9b-it', 'Gemma 2 9B');
-					} else if (keyPrefix === 'qwen') {
-						dropdown.addOption('qwen-plus', 'Qwen-Plus');
-						dropdown.addOption('qwen-max', 'Qwen-Max');
-						dropdown.addOption('qwen-turbo', 'Qwen-Turbo');
-						dropdown.addOption('qwen-long', 'Qwen-Long');
-						dropdown.addOption('qwen3.7-plus', 'Qwen-3.7-Plus (qwen3.7-plus)');
-						dropdown.addOption('qwen3.7-max-2026-05-17', 'Qwen-3.7-Max (2026-05-17)');
-						dropdown.addOption('qwen3.6-35b-a3b', 'Qwen-3.6-35B-A3B');
-						dropdown.addOption('qwen3.6-flash-2026-04-16', 'Qwen-3.6-Flash (2026-04-16)');
-						dropdown.addOption('deepseek-v4-flash', 'DeepSeek-V4-Flash (deepseek-v4-flash)');
-						dropdown.addOption('glm-5.1', 'GLM-5.1 (glm-5.1)');
+					for (const [id, label] of modelOptions) {
+						dropdown.addOption(id, label);
 					}
-					dropdown.addOption('custom', 'Custom Model (自定义模型)...');
+					dropdown.addOption('__custom__', 'Custom Model...');
 
 					dropdown
-						.setValue(isCustom ? 'custom' : (currentModel || presetModels[0]))
+						.setValue(isCustom ? '__custom__' : currentModel)
 						.onChange(async (value) => {
-							if (value === 'custom') {
-								this.plugin.settings[`${keyPrefix}Model`] = '';
+							if (value === '__custom__') {
+								this.plugin.settings[`${keyPrefix}Model`] = '__custom__';
 							} else {
 								this.plugin.settings[`${keyPrefix}Model`] = value;
 							}
@@ -704,15 +723,15 @@ class TranslatorSettingTab extends PluginSettingTab {
 						});
 				});
 
-			if (isCustom || currentModel === '' || !presetModels.includes(currentModel)) {
+			if (isCustom) {
 				new Setting(containerEl)
 					.setName(`Custom ${name} Model ID`)
-					.setDesc(`Enter the custom model ID for ${name}`)
+					.setDesc(`Enter custom model ID for ${name}`)
 					.addText(text => text
-						.setPlaceholder('e.g. qwen-coder-plus')
-						.setValue(currentModel)
+						.setPlaceholder('e.g. gpt-4.5-preview / qwen-omni-turbo')
+						.setValue(currentModel === '__custom__' ? '' : currentModel)
 						.onChange(async (value) => {
-							this.plugin.settings[`${keyPrefix}Model`] = value.trim();
+							this.plugin.settings[`${keyPrefix}Model`] = value.trim() || '__custom__';
 							await this.plugin.saveSettings();
 						}));
 			}
