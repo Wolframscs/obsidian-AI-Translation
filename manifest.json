@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-translation",
-	"name": "Obsidian Translation",
+	"name": "AI Translation",
 	"version": "1.3.0",
 	"minAppVersion": "0.15.0",
 	"description": "Lightweight translation plugin supporting DeepSeek, Tongyi Qianwen, Doubao, Google Gemini, and arbitrary custom models. Select English text and translate with one click, inserting below the original.",
