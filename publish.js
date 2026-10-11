@@ -4,7 +4,7 @@ const readline = require('readline');
 
 // GitHub repository info
 const OWNER = 'Wolframscs';
-const REPO = 'Obsidian-Translation';
+const REPO = 'obsidian-AI-Translation';
 
 // Files to upload
 const FILES_TO_UPLOAD = [

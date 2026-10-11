@@ -31,11 +31,11 @@
 #### Via BRAT (Beta Reviewers Auto-update Tester)
 1. Install the **BRAT** plugin in Obsidian.
 2. In BRAT settings, choose **Add Beta plugin**.
-3. Enter repository URL: `https://github.com/Wolframscs/Obsidian-Translation`
+3. Enter repository URL: `https://github.com/Wolframscs/obsidian-AI-Translation`
 4. BRAT will automatically download the plugin and keep it updated.
 
 #### Manual Installation
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub Release](https://github.com/Wolframscs/Obsidian-Translation/releases).
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub Release](https://github.com/Wolframscs/obsidian-AI-Translation/releases).
 2. Create a folder named `ai-translation` inside your vault's `.obsidian/plugins/` directory.
 3. Place the downloaded files into that folder.
 4. Reload plugins in Obsidian settings and toggle on **AI Translation**.
