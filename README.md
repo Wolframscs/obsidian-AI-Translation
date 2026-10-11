@@ -1,3 +1,75 @@
+# AI Translation for Obsidian
+
+[English](#english) | [中文](#中文)
+
+---
+
+<a name="english"></a>
+## English
+
+### Introduction
+
+**AI Translation** is a lightweight, multi-model AI translation plugin designed specifically for Obsidian. It natively connects to major global and domestic LLM providers as well as any OpenAI-compatible API endpoints, allowing you to translate selected text with one click and automatically insert the translated result directly below the original text.
+
+### ✨ Key Features
+
+- **Multi-Model Support**: Native integrations with DeepSeek, Tongyi Qianwen (Qwen), Doubao, Google Gemini, OpenAI, Anthropic Claude, SiliconFlow, Moonshot (Kimi), Zhipu (GLM), OpenRouter, Groq, and custom API endpoints.
+- **One-Click Translation & Insertion**: Select any text in your note, right-click or press a hotkey, and the translation is inserted neatly beneath the selection.
+- **Custom System Prompts**: Customize translation tone, academic style, and context with full control over the system prompt.
+- **Multi-Language Targeting**: Supports translating into Chinese, English, Japanese, French, German, and any other target languages.
+- **Zero Heavy Dependencies**: Pure Obsidian native implementation using `requestUrl` — lightweight, fast, and fully cross-platform (desktop & mobile).
+
+---
+
+### 📥 Installation
+
+#### From Obsidian Community Plugins (Recommended once listed)
+1. In Obsidian, open **Settings** > **Community plugins**.
+2. Click **Browse** and search for **AI Translation**.
+3. Click **Install**, then **Enable**.
+
+#### Via BRAT (Beta Reviewers Auto-update Tester)
+1. Install the **BRAT** plugin in Obsidian.
+2. In BRAT settings, choose **Add Beta plugin**.
+3. Enter repository URL: `https://github.com/Wolframscs/Obsidian-Translation`
+4. BRAT will automatically download the plugin and keep it updated.
+
+#### Manual Installation
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest GitHub Release](https://github.com/Wolframscs/Obsidian-Translation/releases).
+2. Create a folder named `ai-translation` inside your vault's `.obsidian/plugins/` directory.
+3. Place the downloaded files into that folder.
+4. Reload plugins in Obsidian settings and toggle on **AI Translation**.
+
+---
+
+### ⚙️ Configuration & Supported Providers
+
+In Obsidian **Settings** > **AI Translation**:
+
+1. **AI Provider**: Choose your preferred AI service.
+2. **API Key**: Enter your API key for the chosen provider.
+3. **Model Selection**: Choose from preset models or enter any custom model ID.
+4. **Target Language**: Specify the output language (e.g., `Chinese`, `English`, `Japanese`).
+5. **System Prompt**: Customize translation instructions or use the built-in translation prompt.
+6. **Test Connection**: Click the **Test Connection** button to verify network and credentials.
+
+#### Custom API / Local Ollama Support
+Compatible with any OpenAI-standard endpoint:
+- **Provider**: `Custom API`
+- **URL**: e.g., `http://localhost:11434/v1/chat/completions` (for local Ollama) or `https://api.your-proxy.com/v1/chat/completions`
+- **Model**: e.g., `llama3`, `deepseek-r1`, etc.
+
+---
+
+### 🚀 Usage
+
+1. **Context Menu**: Select text in editor -> right click -> **Translate Selection**.
+2. **Command Palette**: Select text -> `Ctrl/Cmd + P` -> run `Translate Selection (Insert Below)`.
+3. **Hotkey**: Assign a custom shortcut (e.g. `Alt + T` or `Ctrl + T`) under **Settings** > **Hotkeys** > search `Translate Selection`.
+
+---
+
+<a name="中文"></a>
 # Obsidian - Translation 插件说明文档
 
 本插件是一款为 Obsidian 开发的轻量级多模型翻译辅助工具。支持对接国内外主流大语言模型服务及符合 OpenAI 规范的自定义 API 接口，可实现选中文本的一键翻译与自动插入对照。

@@ -1,0 +1,19 @@
+{
+  "name": "obsidian-ai-translation",
+  "version": "1.3.0",
+  "description": "Lightweight translation plugin supporting DeepSeek, Tongyi Qianwen, Doubao, Google Gemini, and custom models.",
+  "main": "main.js",
+  "scripts": {
+    "publish": "node publish.js"
+  },
+  "keywords": [
+    "obsidian",
+    "translation",
+    "ai",
+    "deepseek",
+    "gemini",
+    "openai"
+  ],
+  "author": "CaoSZ",
+  "license": "MIT"
+}
